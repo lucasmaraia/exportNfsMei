@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 @Service
-public class ExportNfsServiceImpl {
+public class ExportNfsServiceImpl implements ExportNfsService {
 
     private static final String BASE_URL = "https://www.nfse.gov.br/EmissorNacional/Notas/Emitidas";
 
@@ -24,6 +24,17 @@ public class ExportNfsServiceImpl {
 
         Map<String, String> cookies = getCookies(requestCookiesNfse);
 
+       return getInvoices(cookies);
+
+    }
+
+    private static boolean hasNextPage(Document doc) {
+        Element nextPage = doc.select("ul.pagination li:not(.disabled) a[data-original-title='Próxima']").first();
+
+        return nextPage != null;
+    }
+
+    private List<Invoice> getInvoices( Map<String, String> cookies){
         List<Invoice> invoices = new ArrayList<>();
 
         int pageNumber = 1;
@@ -36,7 +47,7 @@ public class ExportNfsServiceImpl {
                     .cookies(cookies)
                     .method(Connection.Method.GET);
 
-            Document doc = null;
+            Document doc;
             try {
                 doc = connection.get();
             } catch (IOException e) {
@@ -56,9 +67,15 @@ public class ExportNfsServiceImpl {
                     String issuedTo = cols.get(1).text();
                     String city = cols.get(2).text();
                     String value = cols.get(3).text();
-                    String situation = cols.get(4).text();
                     String tax = cols.get(5).text();
 
+                    Element situationElement = cols.get(4).selectFirst("img");
+                    String situation = "approved";
+
+                    if (situationElement != null) {
+                        String src = situationElement.attr("src");
+                        if (src.contains("cancelada")) situation = "canceled";
+                    }
 
                     Invoice invoice = Invoice.builder()
                             .date(date)
@@ -79,14 +96,7 @@ public class ExportNfsServiceImpl {
             pageNumber++;
         }
 
-      return  invoices;
-
-    }
-
-    private static boolean hasNextPage(Document doc) {
-        Element nextPage = doc.select("ul.pagination li:not(.disabled) a[data-original-title='Próxima']").first();
-
-        return nextPage != null;
+        return  invoices;
     }
 
     private Map<String, String> getCookies(RequestCookiesNfse requestCookiesNfse) {
@@ -97,5 +107,4 @@ public class ExportNfsServiceImpl {
         cookies.put("__RequestVerificationToken_L0VtaXNzb3JOYWNpb25hbA2", requestCookiesNfse.requestVerificationToken());
         return cookies;
     }
-
 }
