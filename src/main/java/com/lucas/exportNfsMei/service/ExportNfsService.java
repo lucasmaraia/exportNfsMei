@@ -1,11 +1,9 @@
 package com.lucas.exportNfsMei.service;
 
-import com.lucas.exportNfsMei.model.Invoice;
 import com.lucas.exportNfsMei.model.RequestCookiesNfse;
-
-import java.util.List;
+import org.springframework.http.ResponseEntity;
 
 public interface ExportNfsService {
 
-    List<Invoice> exportNfsToExcel(RequestCookiesNfse requestCookiesNfse);
+    ResponseEntity<?> exportNfs(RequestCookiesNfse requestCookiesNfse);
 }

@@ -7,6 +7,8 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -20,11 +22,16 @@ public class ExportNfsServiceImpl implements ExportNfsService {
 
     private static final String BASE_URL = "https://www.nfse.gov.br/EmissorNacional/Notas/Emitidas";
 
-    public List<Invoice> exportNfsToExcel(RequestCookiesNfse requestCookiesNfse){
+    public ResponseEntity<?> exportNfs(RequestCookiesNfse requestCookiesNfse){
 
         Map<String, String> cookies = getCookies(requestCookiesNfse);
 
-       return getInvoices(cookies);
+        if(!getInvoices(cookies).isEmpty()){
+            return ResponseEntity.ok(getInvoices(cookies));
+        }
+
+        return new ResponseEntity<>("Notas Fiscais não encontradas por gentileza atualize o cookies",
+                HttpStatus.BAD_REQUEST);
 
     }
 
@@ -51,7 +58,7 @@ public class ExportNfsServiceImpl implements ExportNfsService {
             try {
                 doc = connection.get();
             } catch (IOException e) {
-                throw new RuntimeException(e);
+               return invoices;
             }
             Element table = doc.select("table.table-striped").first();
 
@@ -96,7 +103,7 @@ public class ExportNfsServiceImpl implements ExportNfsService {
             pageNumber++;
         }
 
-        return  invoices;
+        return invoices;
     }
 
     private Map<String, String> getCookies(RequestCookiesNfse requestCookiesNfse) {

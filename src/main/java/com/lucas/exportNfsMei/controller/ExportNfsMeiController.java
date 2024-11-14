@@ -18,6 +18,6 @@ public class ExportNfsMeiController {
 
     @PostMapping
     public ResponseEntity<?> exportNfs(@RequestBody RequestCookiesNfse requestCookiesNfse){
-        return  ResponseEntity.ok(exportNfsService.exportNfsToExcel(requestCookiesNfse));
+        return exportNfsService.exportNfs(requestCookiesNfse);
     }
 }
